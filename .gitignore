@@ -1,0 +1,8 @@
+app/.settings
+app/.cproject
+app/.project
+build
+build_debug
+ext_libs_bin
+ext_libs_bin_debug
+release/bin
