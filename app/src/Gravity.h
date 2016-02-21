@@ -4,7 +4,8 @@
 
 #include <vector>
 
-class Gravity {
+class Gravity
+{
  public:
     Gravity();
     ~Gravity();
@@ -17,7 +18,8 @@ class Gravity {
     int GetCount();
 
  private:
-    struct Particle {
+    struct Particle
+    {
         double x, y;
         double vx, vy;
         double mass;
@@ -31,5 +33,4 @@ class Gravity {
 
     int count;
     std::vector<Particle> particles;
-
 };

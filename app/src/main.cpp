@@ -6,7 +6,8 @@
 #include <cstdio>
 #include <sstream>
 
-int main() {
+int main()
+{
     // Fixing Eclipse x64 bug
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
@@ -42,13 +43,16 @@ int main() {
     sf::View view = window.getView();
     sf::View view_default = window.getView();
 
-    while (window.isOpen()) {
+    while (window.isOpen())
+    {
         sf::Event event;
-        while (window.pollEvent(event)) {
+        while (window.pollEvent(event))
+        {
             if (event.type == sf::Event::Closed)
                 window.close();
 
-            if (event.type == sf::Event::KeyPressed) {
+            if (event.type == sf::Event::KeyPressed)
+            {
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
                 if (event.key.code == sf::Keyboard::Space && gravity.GetCount() < 4096)
@@ -63,7 +67,8 @@ int main() {
                 if (event.key.code == sf::Keyboard::Divide)
                     view.zoom(1.1f);
 
-                if (event.key.code == sf::Keyboard::BackSpace) {
+                if (event.key.code == sf::Keyboard::BackSpace)
+                {
                     float x, y;
                     gravity.GetCenter(x, y);
                     view.setCenter(x, y);
@@ -83,7 +88,8 @@ int main() {
         frames++;
         float t3 = clock.getElapsedTime().asSeconds();
 
-        if (t3 - t0 > 1.0f) {
+        if (t3 - t0 > 1.0f)
+        {
             t0 += 1.0;
             fps = frames;
             frames = 0;

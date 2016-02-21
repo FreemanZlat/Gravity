@@ -17,17 +17,19 @@ static const double MAX_DISTANCE = 4096;
 
 static const double THETA = 0.5;
 
-static double Random(double q) {
+static double Random(double q)
+{
     return q * static_cast<double>(rand()) / (static_cast<double>(RAND_MAX) + 1.0);
 }
 
-GravityTree::GravityTree()
-        : count(1),
-          bbox_x(START_X),
-          bbox_y(START_Y),
-          bbox_size(START_SIZE),
-          root(nullptr),
-          node_idx(0) {
+GravityTree::GravityTree() :
+        count(1),
+        bbox_x(START_X),
+        bbox_y(START_Y),
+        bbox_size(START_SIZE),
+        root(nullptr),
+        node_idx(0)
+{
     srand((unsigned) time(nullptr));
 
     Particle p;
@@ -41,11 +43,14 @@ GravityTree::GravityTree()
     this->particles.push_back(p);
 }
 
-GravityTree::~GravityTree() {
+GravityTree::~GravityTree()
+{
 }
 
-void GravityTree::Add(int count) {
-    for (int i = 0; i < count; ++i) {
+void GravityTree::Add(int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
         Particle p;
 
         double x = Random(2.0 * START_SIZE) - START_SIZE;
@@ -68,13 +73,15 @@ void GravityTree::Add(int count) {
     this->count = this->particles.size();
 }
 
-void GravityTree::Calc(double dt) {
+void GravityTree::Calc(double dt)
+{
     double min_x = this->bbox_x;
     double max_x = this->bbox_x;
     double min_y = this->bbox_y;
     double max_y = this->bbox_y;
 
-    for (auto &particle : this->particles) {
+    for (auto &particle : this->particles)
+    {
         particle.ax = 0.0;
         particle.ay = 0.0;
 
@@ -98,11 +105,13 @@ void GravityTree::Calc(double dt) {
     this->FillTree(this->root);
     this->CalcTree(dt);
 
-    for (int i = 0; i < this->count; ++i) {
+    for (int i = 0; i < this->count; ++i)
+    {
         double dx = this->particles[i].x - this->root->mx;
         double dy = this->particles[i].y - this->root->my;
 
-        if (this->particles[i].killed || dx * dx + dy * dy > MAX_DISTANCE * MAX_DISTANCE) {
+        if (this->particles[i].killed || dx * dx + dy * dy > MAX_DISTANCE * MAX_DISTANCE)
+        {
             this->count--;
             this->particles[i] = this->particles[this->count];
             this->particles.erase(this->particles.begin() + this->count);
@@ -111,7 +120,8 @@ void GravityTree::Calc(double dt) {
     }
 }
 
-void GravityTree::BuildTree() {
+void GravityTree::BuildTree()
+{
     this->node_idx = 0;
     this->root = this->GetNode(&this->particles[0]);
     this->root->bbox_x = this->bbox_x;
@@ -121,8 +131,10 @@ void GravityTree::BuildTree() {
         this->TreeAdd1(this->root, &this->particles[i]);
 }
 
-void GravityTree::FillTree(TreeNode *node) {
-    if (node->particle != nullptr) {
+void GravityTree::FillTree(TreeNode *node)
+{
+    if (node->particle != nullptr)
+    {
         node->mx = node->particle->x;
         node->my = node->particle->y;
         node->mass = node->particle->mass;
@@ -133,7 +145,8 @@ void GravityTree::FillTree(TreeNode *node) {
     node->my = 0.0;
     node->mass = 0.0;
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 4; ++i)
+    {
         if (node->nodes[i] == nullptr)
             continue;
         this->FillTree(node->nodes[i]);
@@ -146,8 +159,10 @@ void GravityTree::FillTree(TreeNode *node) {
     node->my /= node->mass;
 }
 
-void GravityTree::CalcTree(double dt) {
-    for (auto &particle : this->particles) {
+void GravityTree::CalcTree(double dt)
+{
+    for (auto &particle : this->particles)
+    {
         if (particle.killed)
             continue;
 
@@ -161,8 +176,10 @@ void GravityTree::CalcTree(double dt) {
     }
 }
 
-GravityTree::TreeNode* GravityTree::GetNode(Particle * particle) {
-    if (this->node_idx == this->free_nodes.size()) {
+GravityTree::TreeNode* GravityTree::GetNode(Particle * particle)
+{
+    if (this->node_idx == this->free_nodes.size())
+    {
         TreeNode *new_node = new TreeNode;
         this->free_nodes.push_back(new_node);
     }
@@ -173,21 +190,25 @@ GravityTree::TreeNode* GravityTree::GetNode(Particle * particle) {
     return node;
 }
 
-void GravityTree::TreeAdd1(TreeNode *node, Particle *particle) {
-    if (node->particle != nullptr) {
+void GravityTree::TreeAdd1(TreeNode *node, Particle *particle)
+{
+    if (node->particle != nullptr)
+    {
         this->TreeAdd2(node, node->particle);
         node->particle = nullptr;
     }
     this->TreeAdd2(node, particle);
 }
 
-void GravityTree::TreeAdd2(TreeNode *node, Particle *particle) {
+void GravityTree::TreeAdd2(TreeNode *node, Particle *particle)
+{
     int idx = 0;
     if (particle->x > node->bbox_x)
         idx += 1;
     if (particle->y > node->bbox_y)
         idx += 2;
-    if (node->nodes[idx] != nullptr) {
+    if (node->nodes[idx] != nullptr)
+    {
         this->TreeAdd1(node->nodes[idx], particle);
         return;
     }
@@ -198,7 +219,8 @@ void GravityTree::TreeAdd2(TreeNode *node, Particle *particle) {
     node->nodes[idx]->bbox_size = new_size;
 }
 
-void GravityTree::CalcForces(TreeNode *node, Particle *particle) {
+void GravityTree::CalcForces(TreeNode *node, Particle *particle)
+{
     if (node->particle == particle)
         return;
 
@@ -207,17 +229,20 @@ void GravityTree::CalcForces(TreeNode *node, Particle *particle) {
     double dist = sqrt(dx * dx + dy * dy);
 
     if (node->particle == nullptr
-            && (dist < 2.0 * particle->radius || node->bbox_size / (dist - particle->radius) > THETA)) {
+            && (dist < 2.0 * particle->radius || node->bbox_size / (dist - particle->radius) > THETA))
+    {
         for (int i = 0; i < 4; ++i)
             if (node->nodes[i] != nullptr)
                 this->CalcForces(node->nodes[i], particle);
         return;
     }
 
-    if (node->particle != nullptr) {
+    if (node->particle != nullptr)
+    {
         if (node->particle->killed)
             return;
-        if (dist <= particle->radius + node->particle->radius) {
+        if (dist <= particle->radius + node->particle->radius)
+        {
             particle->x = particle->x * particle->mass + node->particle->x * node->particle->mass;
             particle->y = particle->y * particle->mass + node->particle->y * node->particle->mass;
             particle->vx = particle->vx * particle->mass + node->particle->vx * node->particle->mass;
@@ -241,20 +266,24 @@ void GravityTree::CalcForces(TreeNode *node, Particle *particle) {
     particle->ay += node->mass * k * dy;
 }
 
-void GravityTree::Draw(sf::RenderWindow &window) {
+void GravityTree::Draw(sf::RenderWindow &window)
+{
     sf::CircleShape circle(1, 16);
-    for (auto &p : this->particles) {
+    for (auto &p : this->particles)
+    {
         circle.setPosition(p.x - p.radius, p.y - p.radius);
         circle.setRadius(p.radius);
         window.draw(circle);
     }
 }
 
-void GravityTree::GetCenter(float &x, float &y) {
+void GravityTree::GetCenter(float &x, float &y)
+{
     x = this->root->mx;
     y = this->root->my;
 }
 
-int GravityTree::GetCount() {
+int GravityTree::GetCount()
+{
     return this->count;
 }

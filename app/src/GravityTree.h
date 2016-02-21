@@ -4,7 +4,8 @@
 
 #include <vector>
 
-class GravityTree {
+class GravityTree
+{
  public:
     GravityTree();
     ~GravityTree();
@@ -17,7 +18,8 @@ class GravityTree {
     int GetCount();
 
  private:
-    struct Particle {
+    struct Particle
+    {
         double x, y;
         double vx, vy;
         double mass;
@@ -26,7 +28,8 @@ class GravityTree {
         bool killed;
     };
 
-    struct TreeNode {
+    struct TreeNode
+    {
         Particle *particle;
 
         double bbox_x, bbox_y;

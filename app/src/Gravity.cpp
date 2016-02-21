@@ -14,15 +14,17 @@ static const double GRAVITY_MASS = 100000000.0;
 static const double GRAVITY_MASS_BIG = 2000000000000.0;
 static const double MAX_DISTANCE = 4096;
 
-static double Random(double q) {
+static double Random(double q)
+{
     return q * static_cast<double>(rand()) / (static_cast<double>(RAND_MAX) + 1.0);
 }
 
-Gravity::Gravity()
-        : center_x(0.0),
-          center_y(0.0),
-          mass_all(0.0),
-          count(1) {
+Gravity::Gravity() :
+        center_x(0.0),
+        center_y(0.0),
+        mass_all(0.0),
+        count(1)
+{
     srand((unsigned) time(nullptr));
 
     Particle p;
@@ -35,11 +37,14 @@ Gravity::Gravity()
     this->particles.push_back(p);
 }
 
-Gravity::~Gravity() {
+Gravity::~Gravity()
+{
 }
 
-void Gravity::Add(int count) {
-    for (int i = 0; i < count; ++i) {
+void Gravity::Add(int count)
+{
+    for (int i = 0; i < count; ++i)
+    {
         Particle p;
 
         double x = Random(2.0 * START_SIZE) - START_SIZE;
@@ -61,8 +66,10 @@ void Gravity::Add(int count) {
     this->count = this->particles.size();
 }
 
-void Gravity::Calc(double dt) {
-    for (auto &p : this->particles) {
+void Gravity::Calc(double dt)
+{
+    for (auto &p : this->particles)
+    {
         p.ax = 0.0;
         p.ay = 0.0;
     }
@@ -71,10 +78,12 @@ void Gravity::Calc(double dt) {
     this->center_y = 0.0;
     this->mass_all = 0.0;
 
-    for (int i = 0; i < this->count; ++i) {
+    for (int i = 0; i < this->count; ++i)
+    {
         Particle &p1 = this->particles[i];
 
-        for (int j = i + 1; j < this->count; ++j) {
+        for (int j = i + 1; j < this->count; ++j)
+        {
             Particle &p2 = this->particles[j];
 
             double dx = p2.x - p1.x;
@@ -82,7 +91,8 @@ void Gravity::Calc(double dt) {
             double r2 = (dx * dx) + (dy * dy);
             double min_r = p1.radius + p2.radius;
 
-            if (r2 <= min_r * min_r) {
+            if (r2 <= min_r * min_r)
+            {
                 p1.x = p1.x * p1.mass + p2.x * p2.mass;
                 p1.y = p1.y * p1.mass + p2.y * p2.mass;
                 p1.vx = p1.vx * p1.mass + p2.vx * p2.mass;
@@ -127,11 +137,13 @@ void Gravity::Calc(double dt) {
     this->center_x /= this->mass_all;
     this->center_y /= this->mass_all;
 
-    for (int i = 0; i < this->count; ++i) {
+    for (int i = 0; i < this->count; ++i)
+    {
         double dx = this->particles[i].x - this->center_x;
         double dy = this->particles[i].y - this->center_y;
 
-        if (dx * dx + dy * dy > MAX_DISTANCE * MAX_DISTANCE) {
+        if (dx * dx + dy * dy > MAX_DISTANCE * MAX_DISTANCE)
+        {
             this->count--;
             this->particles[i] = this->particles[this->count];
             this->particles.erase(this->particles.begin() + this->count);
@@ -140,20 +152,24 @@ void Gravity::Calc(double dt) {
     }
 }
 
-void Gravity::Draw(sf::RenderWindow &window) {
+void Gravity::Draw(sf::RenderWindow &window)
+{
     sf::CircleShape circle(1, 16);
-    for (auto &p : this->particles) {
+    for (auto &p : this->particles)
+    {
         circle.setPosition(p.x - p.radius, p.y - p.radius);
         circle.setRadius(p.radius);
         window.draw(circle);
     }
 }
 
-void Gravity::GetCenter(float &x, float &y) {
+void Gravity::GetCenter(float &x, float &y)
+{
     x = this->center_x;
     y = this->center_y;
 }
 
-int Gravity::GetCount() {
+int Gravity::GetCount()
+{
     return this->count;
 }

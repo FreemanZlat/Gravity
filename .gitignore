@@ -1,6 +1,6 @@
-app/.settings
-app/.cproject
-app/.project
+.settings
+.cproject
+.project
 build
 build_debug
 ext_libs_bin
