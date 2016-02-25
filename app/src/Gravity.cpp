@@ -19,7 +19,7 @@ Gravity::Gravity()
     srand((unsigned) time(nullptr));
 
     this->particles.count = 0;
-    this->particles.center = vec(0.0, 0.0);
+    this->particles.center = vec(START_X, START_Y);
     this->particles.mass_all = 0.0;
 
     this->particles.add(vec(START_X, START_Y), vec(0.0, 0.0), GRAVITY_MASS_BIG);
@@ -46,29 +46,21 @@ void Gravity::CalcGravity(double dt)
     for (auto &a : this->particles.accel)
         a = vec(0.0, 0.0);
 
-    this->particles.center = vec(0.0, 0.0);
-    this->particles.mass_all = 0.0;
+    this->calc_gravity(this->particles.pos, this->particles.accel);
 
     for (int i = 0; i < this->particles.count; ++i)
     {
-        for (int j = i + 1; j < this->particles.count; ++j)
-        {
-            vec dist = this->particles.pos[j] - this->particles.pos[i];
-            double r2 = glm::dot(dist, dist);
-            double k = 1.0 / (r2 * sqrt(r2) + GRAVITY_E);
-
-            this->particles.accel[i] += this->particles.info[j].mass * k * dist;
-            this->particles.accel[j] -= this->particles.info[i].mass * k * dist;
-        }
-
-        this->particles.vel[i] += GRAVITY_G * this->particles.accel[i] * dt;
+        this->particles.vel[i] += this->particles.accel[i] * dt;
         this->particles.pos[i] += this->particles.vel[i] * dt;
     }
 }
 
 void Gravity::CalcCollisions()
 {
-    for (int i = 0; i < this->particles.count; ++i)
+    this->particles.center = vec(0.0, 0.0);
+    this->particles.mass_all = 0.0;
+
+    for (int i = 0; i < this->particles.count - 1; ++i)
     {
         for (int j = i + 1; j < this->particles.count; ++j)
         {
@@ -131,6 +123,23 @@ void Gravity::GetCenter(float &x, float &y)
 int Gravity::GetCount()
 {
     return this->particles.count;
+}
+
+void Gravity::calc_gravity(std::vector<vec> &pos, std::vector<vec> &accel)
+{
+    for (int i = 0; i < this->particles.count; ++i)
+    {
+        for (int j = i + 1; j < this->particles.count; ++j)
+        {
+            vec dist = pos[j] - pos[i];
+            double r2 = glm::dot(dist, dist);
+            double k = 1.0 / (r2 * sqrt(r2) + GRAVITY_E);
+
+            accel[i] += this->particles.info[j].mass * k * dist;
+            accel[j] -= this->particles.info[i].mass * k * dist;
+        }
+        accel[i] *= GRAVITY_G;
+    }
 }
 
 void Gravity::Particles::add(vec pos, vec vel, double mass)

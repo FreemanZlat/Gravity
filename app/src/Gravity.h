@@ -45,5 +45,7 @@ class Gravity
 
     Particles particles;
 
+    void calc_gravity(std::vector<vec> &pos, std::vector<vec> &accel);
+
     static double Random(double q);
 };

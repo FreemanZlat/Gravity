@@ -13,7 +13,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 
 set(SOURCES
     src/Gravity.cpp
-    src/GravityTree.cpp
     src/main.cpp
 )
 
