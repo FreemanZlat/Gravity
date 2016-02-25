@@ -41,40 +41,10 @@ void Gravity::Add(int count)
     }
 }
 
-//void Gravity::CalcGravity(double dt)
-//{
-//    std::vector<vec> accel(this->particles.count, vec(0.0, 0.0));
-//
-//    this->calc_gravity(this->particles.pos, accel);
-//
-//    for (int i = 0; i < this->particles.count; ++i)
-//    {
-//        this->particles.vel[i] += accel[i] * dt;
-//        this->particles.pos[i] += this->particles.vel[i] * dt;
-//    }
-//}
-
 void Gravity::CalcGravity(double dt)
 {
-    std::vector<vec> accel(this->particles.count, vec(0.0, 0.0));
-    this->calc_gravity(this->particles.pos, accel);
-
-    std::vector<vec> pos1 = this->particles.pos;
-    std::vector<vec> vel1 = this->particles.vel;
-    for (int i = 0; i < this->particles.count; ++i)
-    {
-        vel1[i] += accel[i] * dt;
-        pos1[i] += vel1[i] * dt;
-    }
-
-    std::vector<vec> accel1(this->particles.count, vec(0.0, 0.0));
-    this->calc_gravity(pos1, accel1);
-
-    for (int i = 0; i < this->particles.count; ++i)
-    {
-        this->particles.vel[i] += 0.5 * (accel[i] + accel1[i]) * dt;
-        this->particles.pos[i] += 0.5 * (vel1[i] + this->particles.vel[i]) * dt;
-    }
+//    this->calc_gravity_euler1(dt);
+    this->calc_gravity_euler2(dt);
 }
 
 void Gravity::CalcCollisions()
@@ -82,7 +52,7 @@ void Gravity::CalcCollisions()
     this->particles.center = vec(0.0, 0.0);
     this->particles.mass_all = 0.0;
 
-    for (int i = 0; i < this->particles.count - 1; ++i)
+    for (int i = 0; i < this->particles.count; ++i)
     {
         for (int j = i + 1; j < this->particles.count; ++j)
         {
@@ -161,6 +131,42 @@ void Gravity::calc_gravity(std::vector<vec> &pos, std::vector<vec> &accel)
             accel[j] -= this->particles.info[i].mass * k * dist;
         }
         accel[i] *= GRAVITY_G;
+    }
+}
+
+void Gravity::calc_gravity_euler1(double dt)
+{
+    std::vector<vec> accel(this->particles.count, vec(0.0, 0.0));
+
+    this->calc_gravity(this->particles.pos, accel);
+
+    for (int i = 0; i < this->particles.count; ++i)
+    {
+        this->particles.vel[i] += accel[i] * dt;
+        this->particles.pos[i] += this->particles.vel[i] * dt;
+    }
+}
+
+void Gravity::calc_gravity_euler2(double dt)
+{
+    std::vector<vec> accel(this->particles.count, vec(0.0, 0.0));
+    this->calc_gravity(this->particles.pos, accel);
+
+    std::vector<vec> pos1 = this->particles.pos;
+    std::vector<vec> vel1 = this->particles.vel;
+    for (int i = 0; i < this->particles.count; ++i)
+    {
+        pos1[i] += dt * this->particles.vel[i];
+        vel1[i] += dt * accel[i];
+    }
+
+    std::vector<vec> accel1(this->particles.count, vec(0.0, 0.0));
+    this->calc_gravity(pos1, accel1);
+
+    for (int i = 0; i < this->particles.count; ++i)
+    {
+        this->particles.pos[i] += dt * 0.5 * (vel1[i] + this->particles.vel[i]);
+        this->particles.vel[i] += dt * 0.5 * (accel[i] + accel1[i]);
     }
 }
 
