@@ -35,6 +35,8 @@ class Gravity
         std::vector<vec> vel;
         std::vector<Info> info;
 
+        std::vector<sf::CircleShape> circles;
+
         int count;
         vec center;
         double mass_all;

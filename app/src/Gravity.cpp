@@ -65,6 +65,7 @@ void Gravity::DoCollisions()
 
             this->particles.info[i].mass += this->particles.info[j].mass;
             this->particles.info[i].radius = 0.007 * sqrt(sqrt(this->particles.info[i].mass));
+            this->particles.circles[i].setRadius(this->particles.info[i].radius);
 
             this->particles.pos[i] /= this->particles.info[i].mass;
             this->particles.vel[i] /= this->particles.info[i].mass;
@@ -100,13 +101,11 @@ void Gravity::DoClean()
 
 void Gravity::Draw(sf::RenderWindow &window)
 {
-    sf::CircleShape circle(1, 16);
     for (int i = 0; i < this->particles.count; ++i)
     {
-        circle.setPosition(this->particles.pos[i].x - this->particles.info[i].radius,
-                           this->particles.pos[i].y - this->particles.info[i].radius);
-        circle.setRadius(this->particles.info[i].radius);
-        window.draw(circle);
+        this->particles.circles[i].setPosition(this->particles.pos[i].x - this->particles.info[i].radius,
+                                               this->particles.pos[i].y - this->particles.info[i].radius);
+        window.draw(this->particles.circles[i]);
     }
 }
 
@@ -180,6 +179,8 @@ void Gravity::Particles::add(vec pos, vec vel, double mass)
     this->pos.push_back(pos);
     this->vel.push_back(vel);
     this->info.push_back( { mass, 0.007 * sqrt(sqrt(mass)) });
+    this->circles.push_back(sf::CircleShape(1, 16));
+    this->circles.back().setRadius(this->info.back().radius);
 }
 
 void Gravity::Particles::del(int idx)
@@ -189,10 +190,12 @@ void Gravity::Particles::del(int idx)
     this->pos[idx] = this->pos[this->count];
     this->vel[idx] = this->vel[this->count];
     this->info[idx] = this->info[this->count];
+    this->circles[idx] = this->circles[this->count];
 
     this->pos.pop_back();
     this->vel.pop_back();
     this->info.pop_back();
+    this->circles.pop_back();
 }
 
 double Gravity::Random(double q)
