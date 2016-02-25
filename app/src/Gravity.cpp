@@ -41,19 +41,15 @@ void Gravity::Add(int count)
     }
 }
 
-void Gravity::CalcGravity(double dt)
+void Gravity::DoGravity(double dt)
 {
 //    this->calc_gravity_euler1(dt);
     this->calc_gravity_euler2(dt);
 }
 
-void Gravity::CalcCollisions()
+void Gravity::DoCollisions()
 {
-    this->particles.center = vec(0.0, 0.0);
-    this->particles.mass_all = 0.0;
-
     for (int i = 0; i < this->particles.count; ++i)
-    {
         for (int j = i + 1; j < this->particles.count; ++j)
         {
             vec dist = this->particles.pos[j] - this->particles.pos[i];
@@ -76,7 +72,15 @@ void Gravity::CalcCollisions()
             this->particles.del(j);
             j--;
         }
+}
 
+void Gravity::DoClean()
+{
+    this->particles.center = vec(0.0, 0.0);
+    this->particles.mass_all = 0.0;
+
+    for (int i = 0; i < this->particles.count; ++i)
+    {
         this->particles.center += this->particles.pos[i] * this->particles.info[i].mass;
         this->particles.mass_all += this->particles.info[i].mass;
     }

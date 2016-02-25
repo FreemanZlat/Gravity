@@ -78,17 +78,19 @@ int main()
         }
 
         float t1 = clock.getElapsedTime().asSeconds();
-        gravity.CalcGravity(dt);
+        gravity.DoGravity(dt);
         float t2 = clock.getElapsedTime().asSeconds();
-        gravity.CalcCollisions();
+        gravity.DoCollisions();
         float t3 = clock.getElapsedTime().asSeconds();
+        gravity.DoClean();
+        float t4 = clock.getElapsedTime().asSeconds();
         window.setView(view);
         window.clear(sf::Color(0, 0, 0, 255));
         gravity.Draw(window);
         frames++;
-        float t4 = clock.getElapsedTime().asSeconds();
+        float t5 = clock.getElapsedTime().asSeconds();
 
-        if (t4 - t0 > 1.0f)
+        if (t5 - t0 > 1.0f)
         {
             t0 += 1.0;
             fps = frames;
@@ -97,9 +99,12 @@ int main()
 
         std::stringstream txt;
         txt << "FPS = " << fps << "\n";
-        txt << "Count = " << gravity.GetCount() << "\ndt = " << dt << "\n";
-        txt << "CalcGravity = " << (t2 - t1) * 1000.0f << "\nCalcCollisions = " << (t3 - t2) * 1000.0f << "\n";
-        txt << "Draw = " << (t4 - t3) * 1000.0f;
+        txt << "Count = " << gravity.GetCount() << "\n";
+        txt << "dt = " << dt << "\n";
+        txt << "DoGravity = " << (t2 - t1) * 1000.0f << "\n";
+        txt << "DoCollisions = " << (t3 - t2) * 1000.0f << "\n";
+        txt << "DoClean = " << (t4 - t3) * 1000.0f << "\n";
+        txt << "Draw = " << (t5 - t4) * 1000.0f;
         text.setString(txt.str());
 
         window.setView(view_default);

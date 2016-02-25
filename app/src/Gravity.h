@@ -14,8 +14,9 @@ class Gravity
     typedef glm::dvec2 vec;
 
     void Add(int count);
-    void CalcGravity(double dt);
-    void CalcCollisions();
+    void DoGravity(double dt);
+    void DoCollisions();
+    void DoClean();
     void Draw(sf::RenderWindow &window);
     void GetCenter(float &x, float &y);
 
