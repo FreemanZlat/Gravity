@@ -22,6 +22,8 @@ else()
     set(NUMBER_OF_CPU 1)
 endif()
 
+set(GLM_INCLUDE_DIR ${INSTALL_DIR_EXTLIBS}/glm/include)
+
 set(SFML_INCLUDE_DIR ${INSTALL_DIR_EXTLIBS}/SFML/include)
 set(SFML_LINK_DIR ${INSTALL_DIR_EXTLIBS}/SFML/lib)
 

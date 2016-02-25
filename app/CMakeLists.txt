@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 set(PROJECT_NAME Gravity)
 project(${PROJECT_NAME})
 
+include_directories(${GLM_INCLUDE_DIR})
 include_directories(${SFML_INCLUDE_DIR})
 link_directories(${SFML_LINK_DIR})
 
@@ -29,5 +30,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 sfml_link(${PROJECT_NAME} ${LIBS})
 
 add_dependencies(${PROJECT_NAME} ext_SFML)
+add_dependencies(${PROJECT_NAME} ext_GLM)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${INSTALL_DIR}/bin)

@@ -1,5 +1,4 @@
 #include "Gravity.h"
-#include "GravityTree.h"
 
 #include <SFML/Graphics.hpp>
 
@@ -26,8 +25,7 @@ int main()
     int fps = 0;
     int frames = 0;
 
-//    Gravity gravity;
-    GravityTree gravity;
+    Gravity gravity;
     gravity.Add(2048);
 
     sf::Clock clock;
@@ -80,15 +78,17 @@ int main()
         }
 
         float t1 = clock.getElapsedTime().asSeconds();
-        gravity.Calc(dt);
+        gravity.CalcGravity(dt);
         float t2 = clock.getElapsedTime().asSeconds();
+        gravity.CalcCollisions();
+        float t3 = clock.getElapsedTime().asSeconds();
         window.setView(view);
         window.clear(sf::Color(0, 0, 0, 255));
         gravity.Draw(window);
         frames++;
-        float t3 = clock.getElapsedTime().asSeconds();
+        float t4 = clock.getElapsedTime().asSeconds();
 
-        if (t3 - t0 > 1.0f)
+        if (t4 - t0 > 1.0f)
         {
             t0 += 1.0;
             fps = frames;
@@ -98,7 +98,8 @@ int main()
         std::stringstream txt;
         txt << "FPS = " << fps << "\n";
         txt << "Count = " << gravity.GetCount() << "\ndt = " << dt << "\n";
-        txt << "Calc = " << (t2 - t1) * 1000.0f << "\nDraw = " << (t3 - t2) * 1000.0f;
+        txt << "CalcGravity = " << (t2 - t1) * 1000.0f << "\nCalcCollisions = " << (t3 - t2) * 1000.0f << "\n";
+        txt << "Draw = " << (t4 - t3) * 1000.0f;
         text.setString(txt.str());
 
         window.setView(view_default);
