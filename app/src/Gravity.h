@@ -32,7 +32,6 @@ class Gravity
     {
         std::vector<vec> pos;
         std::vector<vec> vel;
-        std::vector<vec> accel;
         std::vector<Info> info;
 
         int count;

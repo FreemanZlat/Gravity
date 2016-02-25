@@ -21,12 +21,12 @@ int main()
     sf::RenderWindow window(sf::VideoMode(1280, 720, 32), "FreeGravity by Ivan Maklyakov (C) 2014",
                             sf::Style::Titlebar | sf::Style::Close, settings);
 
-    double dt = 0.3;
+    double dt = 0.1;
     int fps = 0;
     int frames = 0;
 
     Gravity gravity;
-    gravity.Add(2048);
+    gravity.Add(1024);
 
     sf::Clock clock;
     float t0 = clock.getElapsedTime().asSeconds();

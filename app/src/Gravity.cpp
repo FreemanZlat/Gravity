@@ -41,17 +41,39 @@ void Gravity::Add(int count)
     }
 }
 
+//void Gravity::CalcGravity(double dt)
+//{
+//    std::vector<vec> accel(this->particles.count, vec(0.0, 0.0));
+//
+//    this->calc_gravity(this->particles.pos, accel);
+//
+//    for (int i = 0; i < this->particles.count; ++i)
+//    {
+//        this->particles.vel[i] += accel[i] * dt;
+//        this->particles.pos[i] += this->particles.vel[i] * dt;
+//    }
+//}
+
 void Gravity::CalcGravity(double dt)
 {
-    for (auto &a : this->particles.accel)
-        a = vec(0.0, 0.0);
+    std::vector<vec> accel(this->particles.count, vec(0.0, 0.0));
+    this->calc_gravity(this->particles.pos, accel);
 
-    this->calc_gravity(this->particles.pos, this->particles.accel);
+    std::vector<vec> pos1 = this->particles.pos;
+    std::vector<vec> vel1 = this->particles.vel;
+    for (int i = 0; i < this->particles.count; ++i)
+    {
+        vel1[i] += accel[i] * dt;
+        pos1[i] += vel1[i] * dt;
+    }
+
+    std::vector<vec> accel1(this->particles.count, vec(0.0, 0.0));
+    this->calc_gravity(pos1, accel1);
 
     for (int i = 0; i < this->particles.count; ++i)
     {
-        this->particles.vel[i] += this->particles.accel[i] * dt;
-        this->particles.pos[i] += this->particles.vel[i] * dt;
+        this->particles.vel[i] += 0.5 * (accel[i] + accel1[i]) * dt;
+        this->particles.pos[i] += 0.5 * (vel1[i] + this->particles.vel[i]) * dt;
     }
 }
 
@@ -147,7 +169,6 @@ void Gravity::Particles::add(vec pos, vec vel, double mass)
     this->count++;
     this->pos.push_back(pos);
     this->vel.push_back(vel);
-    this->accel.push_back(vec(0.0, 0.0));
     this->info.push_back( { mass, 0.007 * sqrt(sqrt(mass)) });
 }
 
@@ -157,12 +178,10 @@ void Gravity::Particles::del(int idx)
 
     this->pos[idx] = this->pos[this->count];
     this->vel[idx] = this->vel[this->count];
-    this->accel[idx] = this->accel[this->count];
     this->info[idx] = this->info[this->count];
 
     this->pos.pop_back();
     this->vel.pop_back();
-    this->accel.pop_back();
     this->info.pop_back();
 }
 
