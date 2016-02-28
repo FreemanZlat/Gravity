@@ -12,9 +12,15 @@ static const double GRAVITY_G = 6.673848e-11;
 static const double GRAVITY_E = 0.1;
 static const double GRAVITY_MASS = 100000000.0;
 static const double GRAVITY_MASS_BIG = 2000000000000.0;
+
 static const double MAX_DISTANCE = 4096;
 
-Gravity::Gravity()
+static const double THETA = 0.5;
+
+Gravity::Gravity(Integration integration, Optimisation optimisation) :
+        integration(integration),
+        optimisation(optimisation),
+        root(nullptr)
 {
     srand((unsigned) time(nullptr));
 
@@ -27,6 +33,8 @@ Gravity::Gravity()
 
 Gravity::~Gravity()
 {
+    for (auto &n : this->nodes_pool.pool)
+        delete n;
 }
 
 void Gravity::Add(int count)
@@ -43,9 +51,12 @@ void Gravity::Add(int count)
 
 void Gravity::DoGravity(double dt)
 {
-//    this->calc_gravity_euler1(dt);
-//    this->calc_gravity_euler2(dt);
-    this->calc_gravity_runge_kutta4(dt);
+    if (this->integration == INTEGRATION_EULER1)
+        this->calc_gravity_euler1(dt);
+    else if (this->integration == INTEGRATION_EULER2)
+        this->calc_gravity_euler2(dt);
+    else if (this->integration == INTEGRATION_RUNGE_KUTTA4)
+        this->calc_gravity_runge_kutta4(dt);
 }
 
 void Gravity::DoCollisions()
@@ -123,19 +134,58 @@ int Gravity::GetCount()
 
 void Gravity::calc_gravity(std::vector<vec> &pos, std::vector<vec> &accel)
 {
-    for (int i = 0; i < this->particles.count; ++i)
+    if (this->optimisation == OPTIMISATION_NONE)
     {
-        for (int j = i + 1; j < this->particles.count; ++j)
-        {
-            vec dist = pos[j] - pos[i];
-            double r2 = glm::dot(dist, dist);
-            double k = 1.0 / (r2 * sqrt(r2) + GRAVITY_E);
-
-            accel[i] += this->particles.info[j].mass * k * dist;
-            accel[j] -= this->particles.info[i].mass * k * dist;
-        }
-        accel[i] *= GRAVITY_G;
+        for (int i = 0; i < this->particles.count; ++i)
+            this->calc_gravity_all(i, pos, accel);
     }
+    else if (this->optimisation == OPTIMISATION_TREE)
+    {
+        this->calc_tree();
+        for (int i = 0; i < this->particles.count; ++i)
+            this->calc_gravity_tree(this->root, i, pos, accel);
+    }
+}
+
+void Gravity::calc_gravity_all(int particle_idx, std::vector<vec> &pos, std::vector<vec> &accel)
+{
+    for (int j = particle_idx + 1; j < this->particles.count; ++j)
+    {
+        vec dist = pos[j] - pos[particle_idx];
+        double r2 = glm::dot(dist, dist);
+        double k = 1.0 / (r2 * sqrt(r2) + GRAVITY_E);
+
+        accel[particle_idx] += this->particles.info[j].mass * k * dist;
+        accel[j] -= this->particles.info[particle_idx].mass * k * dist;
+    }
+    accel[particle_idx] *= GRAVITY_G;
+}
+
+void Gravity::calc_gravity_tree(TreeNode *node, int particle_idx, std::vector<vec> &pos, std::vector<vec> &accel)
+{
+    if (node->particle_idx == particle_idx)
+        return;
+
+    vec dist = node->mass_center - pos[particle_idx];
+    double r = glm::length(dist);
+
+    int bbox_size = node->bbox_size.x;
+    if (bbox_size < node->bbox_size.y)
+        bbox_size = node->bbox_size.y;
+
+    if (node->particle_idx < 0
+            && (r < 2.0 * this->particles.info[particle_idx].radius
+                    || bbox_size / (r - this->particles.info[particle_idx].radius) > THETA))
+    {
+        for (int i = 0; i < 4; ++i)
+            if (node->nodes[i] != nullptr)
+                this->calc_gravity_tree(node->nodes[i], particle_idx, pos, accel);
+        return;
+    }
+
+    double k = 1.0 / (r * r * r + GRAVITY_E);
+
+    accel[particle_idx] += GRAVITY_G * node->mass * k * dist;
 }
 
 void Gravity::calc_gravity_euler1(double dt)
@@ -236,6 +286,97 @@ void Gravity::calc_gravity_runge_kutta4(double dt)
     }
 }
 
+void Gravity::calc_tree()
+{
+    this->nodes_pool.reset();
+    this->root = this->nodes_pool.get_node(0);
+
+    this->calc_bbox();
+
+    for (int i = 1; i < this->particles.count; ++i)
+        this->add_node1(this->root, i);
+
+    this->fill_tree(this->root);
+}
+
+void Gravity::calc_bbox()
+{
+    vec min = this->particles.pos[0];
+    vec max = min;
+
+    for (int i = 1; i < this->particles.count; ++i)
+    {
+        if (this->particles.pos[i].x < min.x)
+            min.x = this->particles.pos[i].x;
+        if (this->particles.pos[i].x > max.x)
+            max.x = this->particles.pos[i].x;
+
+        if (this->particles.pos[i].y < min.y)
+            min.y = this->particles.pos[i].y;
+        if (this->particles.pos[i].y > max.y)
+            max.y = this->particles.pos[i].y;
+    }
+
+    this->root->bbox_size = 0.5 * (max - min);
+    this->root->bbox = min + this->root->bbox_size;
+}
+
+void Gravity::add_node1(TreeNode *node, int partice_idx)
+{
+    if (node->particle_idx >= 0)
+    {
+        this->add_node2(node, node->particle_idx);
+        node->particle_idx = -1;
+    }
+    this->add_node2(node, partice_idx);
+}
+
+void Gravity::add_node2(TreeNode *node, int partice_idx)
+{
+    int idx = 0;
+    if (this->particles.pos[partice_idx].x > node->bbox.x)
+        idx += 1;
+    if (this->particles.pos[partice_idx].y > node->bbox.y)
+        idx += 2;
+    if (node->nodes[idx] != nullptr)
+    {
+        this->add_node1(node->nodes[idx], partice_idx);
+        return;
+    }
+    node->nodes[idx] = this->nodes_pool.get_node(partice_idx);
+    node->nodes[idx]->bbox_size = 0.5 * node->bbox_size;
+    node->nodes[idx]->bbox.x = node->bbox.x
+            + ((this->particles.pos[partice_idx].x > node->bbox.x) ?
+                    node->nodes[idx]->bbox_size.x : -node->nodes[idx]->bbox_size.x);
+    node->nodes[idx]->bbox.y = node->bbox.y
+            + ((this->particles.pos[partice_idx].y > node->bbox.y) ?
+                    node->nodes[idx]->bbox_size.y : -node->nodes[idx]->bbox_size.y);
+}
+
+void Gravity::fill_tree(TreeNode *node)
+{
+    if (node->particle_idx >= 0)
+    {
+        node->mass_center = this->particles.pos[node->particle_idx];
+        node->mass = this->particles.info[node->particle_idx].mass;
+        return;
+    }
+
+    node->mass_center = vec(0.0, 0.0);
+    node->mass = 0.0;
+
+    for (int i = 0; i < 4; ++i)
+    {
+        if (node->nodes[i] == nullptr)
+            continue;
+        this->fill_tree(node->nodes[i]);
+        node->mass_center += node->nodes[i]->mass_center * node->nodes[i]->mass;
+        node->mass += node->nodes[i]->mass;
+    }
+
+    node->mass_center /= node->mass;
+}
+
 void Gravity::Particles::add(vec pos, vec vel, double mass)
 {
     this->count++;
@@ -259,6 +400,24 @@ void Gravity::Particles::del(int idx)
     this->vel.pop_back();
     this->info.pop_back();
     this->circles.pop_back();
+}
+
+Gravity::TreeNode* Gravity::NodesPool::get_node(int particle_idx)
+{
+    if (this->idx == this->pool.size())
+        this->pool.push_back(new TreeNode);
+
+    TreeNode *node = this->pool[this->idx++];
+    node->particle_idx = particle_idx;
+    for (int i = 0; i < 4; ++i)
+        node->nodes[i] = nullptr;
+
+    return node;
+}
+
+void Gravity::NodesPool::reset()
+{
+    this->idx = 0;
 }
 
 double Gravity::Random(double q)

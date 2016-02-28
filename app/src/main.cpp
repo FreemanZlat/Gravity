@@ -25,7 +25,7 @@ int main()
     int fps = 0;
     int frames = 0;
 
-    Gravity gravity;
+    Gravity gravity(Gravity::INTEGRATION_RUNGE_KUTTA4, Gravity::OPTIMISATION_TREE);
     gravity.Add(2048);
 
     sf::Clock clock;
